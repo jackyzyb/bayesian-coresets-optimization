@@ -16,8 +16,8 @@ The examples also depend on [Bokeh](https://bokeh.pydata.org/en/latest) for plot
 ### The Experiments 
 
 The three experiments in our paper are in `bayesiancoresets/examples/riemann_gaussian/` (Synthetic Gaussian posterior inference),
-`bayesiancoresets/examples/riemann_linear_regression/` (ayesian Radial Basis Function Regression),
-and `bayesiancoresets/examples/riemann_logistic_poisson_regression/` (ayesian logistic and Poisson regression),
+`bayesiancoresets/examples/riemann_linear_regression/` (Bayesian Radial Basis Function Regression),
+and `bayesiancoresets/examples/riemann_logistic_poisson_regression/` (Bayesian logistic and Poisson regression),
 respectively.
 To run the experiments, simply run the `run.sh` under each directories.
 
