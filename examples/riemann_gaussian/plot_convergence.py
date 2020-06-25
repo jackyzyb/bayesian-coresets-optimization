@@ -1,17 +1,16 @@
+import os
+import sys
+
 import bokeh.plotting as bkp
 import numpy as np
-import sys, os
+
 # make it so we can import models/etc from parent folder
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
 from plotting import *
-from bokeh.io import export_svgs
-from bokeh.layouts import gridplot
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Range1d, LabelSet, Label
 
 plot_reverse_kl = True
 trials = [1]
-nms = [('GIGAOE', 'GIGA'), ('SVI', 'SparseVI'),  ('RAND', 'Uniform'), ('IHT', 'A-IHT'), ('IHT-2', 'A-IHT II')]
+nms = [('GIGAOE', 'GIGA'), ('SVI', 'SparseVI'), ('RAND', 'Uniform'), ('IHT', 'A-IHT'), ('IHT-2', 'A-IHT II')]
 
 # plot the KL figure
 fig = bkp.figure(y_axis_type='log', plot_width=1000, plot_height=1000, x_axis_label='iteration',
@@ -49,16 +48,17 @@ for i, nm in enumerate(nms):
     iter = list(range(max_iter))
     fig.line(iter[::plot_every], obj_list[::plot_every], color=pal[i], line_width=5, legend=nm[1])
     if nm[0] == 'IHT':
-      fig.circle(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color=pal[i], size=marker_size, legend=nm[1])
+        fig.circle(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color=pal[i], size=marker_size,
+                   legend=nm[1])
     elif nm[0] == 'IHT-2':
-      fig.circle(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color="white",
-                 size=marker_size, legend=nm[1])
+        fig.circle(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color="white",
+                   size=marker_size, legend=nm[1])
     elif nm[0] == 'SVI':
-      fig.square(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color="white",
-                 size=marker_size, legend=nm[1])
+        fig.square(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color="white",
+                   size=marker_size, legend=nm[1])
     elif nm[0] == 'GIGAOE':
-      fig.square(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color=pal[i],
-                 size=marker_size, legend=nm[1])
+        fig.square(iter[::marker_plot_every], obj_list[::marker_plot_every], fill_color=pal[i],
+                   size=marker_size, legend=nm[1])
 
 legend_len = len(fig.legend.items)
 fig.legend.items = fig.legend.items[legend_len - 2:legend_len] + fig.legend.items[0:legend_len - 2]

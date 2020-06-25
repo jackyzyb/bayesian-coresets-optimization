@@ -8,9 +8,9 @@
 
 for ID in {1..20}
 do
-    for alg in "IHT" "PRIOR" "RAND" "GIGAO" "GIGAR" "SVI"
+    for alg in "IHT" "IHT-2" "PRIOR" "RAND" "GIGAO" "GIGAR" "SVI"
     do
-        for dnm in  "synth_lr" "phishing" "ds1" "synth_poiss" "biketrips" "airportdelays"
+        for dnm in "synth_lr" "phishing" "ds1" "synth_poiss" "biketrips" "airportdelays"
 	do
 		python3 main.py $dnm $alg $ID
 	done

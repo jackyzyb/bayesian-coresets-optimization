@@ -1,8 +1,9 @@
-import numpy as np
-import bokeh.plotting as bkp
+import os
+import sys
+
 import bokeh.layouts as bkl
-import time
-import os, sys
+import bokeh.plotting as bkp
+import numpy as np
 
 # make it so we can import models/etc from parent folder
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
@@ -16,11 +17,11 @@ dnames = ['synth_lr']  # one of the dataset names in ['synth_lr', 'ds1', 'phishi
 plot_every = 5
 marker_plot_every = 4
 marker_size = 25
-is_forward_KL = False
+is_forward_KL = True
 if is_forward_KL:
-  y_label = 'Forward KL'
+    y_label = 'Forward KL'
 else:
-  y_label = 'Reverse KL'
+    y_label = 'Reverse KL'
 
 figs = []
 for dnm in dnames:
@@ -50,12 +51,14 @@ for dnm in dnames:
     std_kls[dnm] = kltot / len(trials)
 
     for alg in algs:
-        if alg[0] == 'IHT-2':
-            folder = 'results/results-iht-2/'
-            trials = [fn for fn in os.listdir(folder) if dnm + '_' + 'IHT' + '_results_' in fn]
-        else:
-            folder = 'results/'
-            trials = [fn for fn in os.listdir(folder) if dnm + '_' + alg[0] + '_results_' in fn]
+        # if alg[0] == 'IHT-2':
+        #     folder = 'results/results-iht-2/'
+        #     trials = [fn for fn in os.listdir(folder) if dnm + '_' + 'IHT' + '_results_' in fn]
+        # else:
+        #     folder = 'results/'
+        #     trials = [fn for fn in os.listdir(folder) if dnm + '_' + alg[0] + '_results_' in fn]
+        folder = 'results/'
+        trials = [fn for fn in os.listdir(folder) if dnm + '_' + alg[0] + '_results_' in fn]
         if len(trials) == 0: continue
         Ms = np.load(folder + trials[0])['Ms'][2:][::plot_every]
         kls = np.zeros((len(trials), len(Ms)))

@@ -40,4 +40,3 @@ model {
   y ~ poisson(f);
 }
 """
-

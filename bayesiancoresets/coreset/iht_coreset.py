@@ -1,4 +1,5 @@
 import numpy as np
+
 from .coreset import Coreset
 
 """
@@ -6,6 +7,7 @@ This file contains the two approaches, i.e., Automated Accelerated IHT and Autom
 proposed in Bayesian Coresets: An Optimization Perspective.
 The two approaches are presented in IHTCoreset._iht() and IHTCoreset._iht_ii(), respectively. 
 """
+
 
 class FiniteTangentSpace():
     def __init__(self, tangent_space_factory, d):
@@ -46,9 +48,10 @@ class FiniteTangentSpace():
 
 
 class IHTCoreset(Coreset):
-  """
-  Same as other 'hilbert' methods, this class takes in a tangent space for random projection to finite space.
-  """
+    """
+    Same as other 'hilbert' methods, this class takes in a tangent space for random projection to finite space.
+    """
+
     def __init__(self, tangent_space_factory, d, iht_mode='IHT', **kw):
         super().__init__(**kw)
         self.reached_numeric_limit = False
@@ -109,28 +112,26 @@ class IHTCoreset(Coreset):
             x_prev = x_cur
             if (i == 1):
                 res = y
-                der = Phi_t.dot(res)
+                der = Phi_t.dot(res)    # compute gradient
             else:
                 res = y - Phi_x_cur - tau * Phi_diff
-                der = Phi_t.dot(res)
+                der = Phi_t.dot(res)    # compute gradient
             Phi_x_prev = Phi_x_cur
             complementary_Yi[Y_i] = 0
             ind_der = np.flip(np.argsort(np.absolute(np.squeeze(der * complementary_Yi))))
             complementary_Yi[Y_i] = 1
-            S_i = Y_i + np.squeeze(ind_der[0:K]).tolist()
+            S_i = Y_i + np.squeeze(ind_der[0:K]).tolist()   # identify active subspace
             ider = der[S_i]
             Pder = Phi[:, S_i].dot(ider)
-            mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2
-            b = y_cur + mu_bar * der
-            ind_b = np.flip(np.argsort(np.absolute(np.squeeze(b))))
+            mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2    # step size selection
+            b = y_cur + mu_bar * der                    # gradient descent
+            ind_b = np.flip(np.argsort(np.squeeze(b)))
             ind_b = np.squeeze(ind_b).tolist()
             x_cur = np.zeros([N, 1])
             S_i_temp = ind_b[0:K]
-            x_cur[S_i_temp] = b[ind_b[0:K]]
+            x_cur[S_i_temp] = b[ind_b[0:K]]             # projection
             X_i = S_i_temp
-
-            # truncate negative entries
-            x_cur[x_cur < 0] = 0
+            x_cur[x_cur < 0] = 0        # truncate negative entries
 
             Phi_x_cur = Phi[:, X_i].dot(x_cur[X_i])
             res = y - Phi_x_cur
@@ -196,8 +197,8 @@ class IHTCoreset(Coreset):
         # Initialize to zero vector
         x_cur = np.zeros([N, 1])
         y_cur = np.zeros([N, 1])
-        # x_cur = np.random.random([N, 1])
-        # y_cur = np.random.random([N, 1])
+        #x_cur = np.random.random([N, 1])
+        #y_cur = np.random.random([N, 1])
 
         Phi_x_cur = np.zeros([M, 1])
         Y_i = []
@@ -211,36 +212,34 @@ class IHTCoreset(Coreset):
             x_prev = x_cur
             if (i == 1):
                 res = y
-                der = Phi_t.dot(res)
+                der = Phi_t.dot(res)        # compute gradient
             else:
                 res = y - Phi_x_cur - tau * Phi_diff
-                der = Phi_t.dot(res)
+                der = Phi_t.dot(res)        # compute gradient
 
             Phi_x_prev = Phi_x_cur
             complementary_Yi[Y_i] = 0
             ind_der = np.flip(np.argsort(np.absolute(np.squeeze(der * complementary_Yi))))
             complementary_Yi[Y_i] = 1
-            S_i = Y_i + np.squeeze(ind_der[0:K]).tolist()
+            S_i = Y_i + np.squeeze(ind_der[0:K]).tolist()       # identify active subspace
             ider = der[S_i]
             Pder = Phi[:, S_i].dot(ider)
-            mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2
-            b = y_cur[S_i] + mu_bar * ider
-            ind_b = np.flip(np.argsort(np.absolute(np.squeeze(b))))
+            mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2    # step size selection
+            b = y_cur + mu_bar * der                            # gradient descent
+            ind_b = np.flip(np.argsort(np.squeeze(b)))
             ind_b = np.squeeze(ind_b).tolist()
             x_cur = np.zeros([N, 1])
-            S_i_temp = [S_i[j] for j in ind_b[0:K]]
-            x_cur[S_i_temp] = b[ind_b[0:K]]
+            S_i_temp = ind_b[0:K]
+            x_cur[S_i_temp] = b[ind_b[0:K]]                     # projection
             X_i = S_i_temp
             Phi_x_cur = Phi[:, X_i].dot(x_cur[X_i])
             res = y - Phi_x_cur
-            der = Phi_t.dot(res)
+            der = Phi_t.dot(res)                                # compute gradient
             ider = der[X_i]
             Pder = Phi[:, X_i].dot(ider)
-            mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2
-            x_cur[X_i] = x_cur[X_i] + mu_bar * ider
-
-            # hard threshold negative entries
-            x_cur[x_cur < 0] = 0
+            mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2    # step size selection
+            x_cur[X_i] = x_cur[X_i] + mu_bar * ider             # debias
+            x_cur[x_cur < 0] = 0                                # hard threshold negative entries
 
             Phi_x_cur = Phi[:, X_i].dot(x_cur[X_i])
             res = y - Phi_x_cur
