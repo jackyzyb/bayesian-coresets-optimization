@@ -2,7 +2,7 @@
 
 # Bayesian Coresets: An Optimization Perspective
 
-The code is used for the experiments in the article, Bayesian Coresets: An Optimization Perspective. We add our IHT 
+The code is used for the experiments in the article, [Bayesian Coresets: An Optimization Perspective](https://arxiv.org/abs/2007.00715). We add our IHT 
 methods in addition to [Trevor Campbell, etc.'s repository](https://github.com/trevorcampbell/bayesian-coresets) (commit
 a7d97b7
 on Nov 27, 2019).   
@@ -20,6 +20,3 @@ The three experiments in our paper are in `bayesiancoresets/examples/riemann_gau
 and `bayesiancoresets/examples/riemann_logistic_poisson_regression/` (Bayesian logistic and Poisson regression),
 respectively.
 To run the experiments, simply run the `run.sh` under each directories.
-
-### Citation
-TBD
