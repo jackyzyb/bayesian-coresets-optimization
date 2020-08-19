@@ -10,7 +10,7 @@ on Nov 27, 2019).
 ### Accelerated IHT for Coreset
 Please refer to the manuscript for details regarding the two algorithms, i.e., A-IHT I (Algorithm 1) and A-IHT II (Algorithm 2).
 
-The two methods are available in `IHT_toolbox/accelerated_iht.py` and can be applied directly. Both numpy version and pytorch version are provided. For large-slcae problems, use the pytorch version on GPU for accelaration. 
+The two methods are available at `IHT_toolbox/accelerated_iht.py` in the [toolbox](https://github.com/jackyzyb/Bayesian-Coresets-An-Optimization-Perspective/tree/master/IHT_toolbox) and can be applied directly. Both numpy version and pytorch version are provided. For large-slcae problems, use the pytorch version on GPU for accelaration. 
 
 
 ### Installation and Dependencies

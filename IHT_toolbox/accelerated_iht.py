@@ -4,10 +4,10 @@ Bayesian Coresets: An Optimization Perspective (https://arxiv.org/abs/2007.00715
 
 Both numpy version and pytorch version are offered, where the torch version can be run on GPU for acceleration.
 4 functions are included:
-iht_obj(y, A, x):                                               calculate the objective value
-a_iht_i(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):     A-IHT I implemented by numpy
-a_iht_ii(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):     A-IHT II implemented by numpy
-
+iht_obj(y, A, x):                                                   calculate the objective value
+a_iht_i(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):         A-IHT I implemented by numpy
+a_iht_ii(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):        A-IHT II implemented by numpy
+a_iht_ii_torch(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):  A-IHT II implemented by torch
 
 The optimization objective is
     argmin_x ||y - Ax||^2    s.t.    |x|_0 <= K    and     x >= 0
@@ -18,7 +18,6 @@ The optimization objective is
 
 import numpy as np
 import torch
-from tqdm import tqdm
 
 
 def iht_obj(y, A, x):
