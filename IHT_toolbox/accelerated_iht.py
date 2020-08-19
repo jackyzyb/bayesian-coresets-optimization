@@ -124,7 +124,7 @@ def a_iht_i(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):
 
 def a_iht_ii(y, A, K, tol=1e-5, max_iter_num=300, verbose=True):
     """
-    A-IHT I implemented by numpy
+    A-IHT II implemented by numpy
     :param y: numpy.ndarray of shape (M, 1)
     :param A: numpy.ndarray of shape (M, N)
     :param K: int (sparsity constraint)
