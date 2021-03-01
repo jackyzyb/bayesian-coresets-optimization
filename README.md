@@ -2,7 +2,7 @@
 
 # Bayesian Coresets: Revisiting the Nonconvex Optimization Perspective
 
-The code is used for the experiments in the paper, [Bayesian Coresets: An Optimization Perspective](https://arxiv.org/abs/2007.00715). We add our IHT 
+The code is used for the experiments in the paper, [Bayesian Coresets: Revisiting the Optimization Perspective](https://arxiv.org/abs/2007.00715). We add our IHT 
 methods in addition to [Trevor Campbell, etc.'s repository](https://github.com/trevorcampbell/bayesian-coresets) (commit
 a7d97b7
 on Nov 27, 2019).   
