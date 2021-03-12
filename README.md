@@ -6,7 +6,6 @@ This repository provides python implementation for constructing Bayesian coreset
 
 Corresponding paper:
  [Bayesian Coresets: Revisiting the Optimization Perspective](https://arxiv.org/abs/2007.00715).
- 
  Jacky Y. Zhang, Rajiv Khanna, Anastasios Kyrillidis, and Oluwasanmi Koyejo. (*AISTATS 2021*)
 
 Please refer to the paper for details regarding the two algorithms, i.e., A-IHT I (Algorithm 1) and A-IHT II (Algorithm 2),
