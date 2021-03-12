@@ -1,27 +1,46 @@
 
+# Bayesian Coresets Construction with Accelerated Iterative Hard Thresholding
 
-# Bayesian Coresets: Revisiting the Nonconvex Optimization Perspective
+This repository provides python implementation for constructing Bayesian coreset using 
+ accelerated iterative hard thresholding (A-IHT). 
 
-The code is used for the experiments in the paper, [Bayesian Coresets: Revisiting the Optimization Perspective](https://arxiv.org/abs/2007.00715). We add our IHT 
-methods in addition to [Trevor Campbell, etc.'s repository](https://github.com/trevorcampbell/bayesian-coresets) (commit
-a7d97b7
-on Nov 27, 2019).   
+Corresponding paper:
+ [Bayesian Coresets: Revisiting the Optimization Perspective](https://arxiv.org/abs/2007.00715), 
+ Jacky Y. Zhang, Rajiv Khanna, Anastasios Kyrillidis, and Oluwasanmi Koyejo. (**AISTATS 2021**)
 
-### Accelerated IHT for Coreset
-Please refer to the manuscript for details regarding the two algorithms, i.e., A-IHT I (Algorithm 1) and A-IHT II (Algorithm 2).
+Please refer to the paper for details regarding the two algorithms, i.e., A-IHT I (Algorithm 1) and A-IHT II (Algorithm 2),
+and the experiment settings.
 
-The two methods are available at `IHT_toolbox/accelerated_iht.py` in the [toolbox](https://github.com/jackyzyb/Bayesian-Coresets-An-Optimization-Perspective/tree/master/IHT_toolbox) and can be applied directly. Both numpy version and pytorch version are provided. For large-slcae problems, use the pytorch version on GPU for accelaration. 
+*Contents* 
 
+1. IHT Toolbox
+2. Experiments
+
+
+## IHT Toolbox
+Three implementations of the A-IHT are provided in `IHT_toolbox/accelerated_iht.py`, and can be applied directly.
+Specifically,
+1.  A-IHT I implemented with numpy
+2.  A-IHT II implemented with numpy
+3.  A-IHT II implemented with pytorch  
+For large-scale problems, use the pytorch version on GPU for acceleration. 
+
+
+## Experiments
+
+The three experiments in our paper are in `experiments/bayesiancoresets/examples/riemann_gaussian/` 
+(Synthetic Gaussian posterior inference),
+`experiments/bayesiancoresets/examples/riemann_linear_regression/` (Bayesian Radial Basis Function Regression),
+and `experiments/bayesiancoresets/examples/riemann_logistic_poisson_regression/` (Bayesian logistic and Poisson regression),
+respectively.
+To run the experiments, simply run the `run.sh` under each directories.
 
 ### Installation and Dependencies
 
-To install the experiment with pip, download the repository and run `pip3 install . --user` in the repository's root folder. Note: this package depends on [NumPy](http://www.numpy.org), [SciPy](https://www.scipy.org), and [SciKit Learn](https://scikit-learn.org).
-The examples also depend on [Bokeh](https://bokeh.pydata.org/en/latest) for plotting.
+To install the experiment with pip, download the repository and run `pip3 install . --user` in the `experiments/` folder. 
+The experiments depend on [NumPy](http://www.numpy.org), [SciPy](https://www.scipy.org), and [SciKit Learn](https://scikit-learn.org).
+The examples also depend on [Bokeh](https://bokeh.pydata.org/en/latest) and [cairosvg](https://cairosvg.org/) for plotting.
 
-### The Experiments 
-
-The three experiments in our manuscript are in `bayesiancoresets/examples/riemann_gaussian/` (Synthetic Gaussian posterior inference),
-`bayesiancoresets/examples/riemann_linear_regression/` (Bayesian Radial Basis Function Regression),
-and `bayesiancoresets/examples/riemann_logistic_poisson_regression/` (Bayesian logistic and Poisson regression),
-respectively.
-To run the experiments, simply run the `run.sh` under each directories.
+### Reference
+The experiments are built on the framework of [Trevor Campbell, etc.'s repository](https://github.com/trevorcampbell/bayesian-coresets) 
+(commit a7d97b7 on Nov 27, 2019).   

@@ -1,8 +1,6 @@
 import os
 import sys
-
 import numpy as np
-
 import bayesiancoresets as bc
 
 # make it so we can import models/etc from parent folder
@@ -54,14 +52,7 @@ print('Basis dimension: ' + str(d))
 # model params
 mu0 = datamn * np.ones(d)
 Sig0 = (datastd ** 2 + datamn ** 2) * np.eye(d)
-# Sig = datastd**2*np.eye(d)
-# SigL = np.linalg.cholesky(Sig)
 Sig0inv = np.linalg.inv(Sig0)
-# Siginv = np.linalg.inv(Sig)
-# SigLInv = np.linalg.inv(SigL)
-
-# for the actual coreset construction, use the trial # and name as seed
-# np.random.seed(int(''.join([ str(ord(ch)) for ch in nm+tr])) % 2**32)
 
 # generate basis functions by uniformly randomly picking locations in the dataset
 print('Trial ' + tr)
@@ -129,12 +120,12 @@ def tsf_exact_w(wts, idcs):
 
 
 tsf_exact_optimal = lambda: tsf_exact_w(np.ones(x.shape[0]), np.arange(x.shape[0]))
-rlst_idcs = np.arange(x.shape[0])
-np.random.shuffle(rlst_idcs)
-rlst_idcs = rlst_idcs[:int(0.1 * rlst_idcs.shape[0])]
-rlst_w = np.zeros(x.shape[0])
-rlst_w[rlst_idcs] = 2. * x.shape[0] / rlst_idcs.shape[0] * np.random.rand(rlst_idcs.shape[0])
-tsf_exact_realistic = lambda: tsf_exact_w(2. * np.random.rand(x.shape[0]), np.arange(x.shape[0]))
+# rlst_idcs = np.arange(x.shape[0])
+# np.random.shuffle(rlst_idcs)
+# rlst_idcs = rlst_idcs[:int(0.1 * rlst_idcs.shape[0])]
+# rlst_w = np.zeros(x.shape[0])
+# rlst_w[rlst_idcs] = 2. * x.shape[0] / rlst_idcs.shape[0] * np.random.rand(rlst_idcs.shape[0])
+# tsf_exact_realistic = lambda: tsf_exact_w(2. * np.random.rand(x.shape[0]), np.arange(x.shape[0]))
 
 ##############################
 
@@ -144,17 +135,14 @@ print('Creating coreset construction objects')
 sparsevi = bc.SparseVICoreset(tsf_exact_w, opt_itrs=opt_itrs)
 giga_optimal = bc.HilbertCoreset(tsf_optimal)
 giga_optimal_exact = bc.HilbertCoreset(tsf_exact_optimal)
-giga_realistic = bc.HilbertCoreset(tsf_realistic)
-giga_realistic_exact = bc.HilbertCoreset(tsf_exact_realistic)
+# giga_realistic = bc.HilbertCoreset(tsf_realistic)
+# giga_realistic_exact = bc.HilbertCoreset(tsf_exact_realistic)
 unif = bc.UniformSamplingCoreset(x.shape[0])
 iht = bc.IHTCoreset(tsf_exact_optimal, proj_dim, 'IHT')
 iht_ii = bc.IHTCoreset(tsf_exact_optimal, proj_dim, 'IHT-2')
 
 algs = {'SVI': sparsevi,
-        # 'GIGAO': giga_optimal,
         'GIGAOE': giga_optimal_exact,
-        # 'GIGAR': giga_realistic,
-        # 'GIGARE': giga_realistic_exact,
         'IHT': iht,
         'IHT-2': iht_ii,
         'RAND': unif}
@@ -183,10 +171,6 @@ else:
         # store weights
         wts, idcs = alg.weights()
         w[m, idcs] = wts
-
-        # printouts for debugging purposes
-        # print('reverse KL: ' + str(weighted_post_KL(mu0, Sig0inv, Siginv, x, w_opt[m, :], reverse=True)))
-        # print('reverse KL opt: ' + str(weighted_post_KL(mu0, Sig0inv, Siginv, x, w_opt[m, :], reverse=True)))
 
 muw = np.zeros((M + 1, mu0.shape[0]))
 Sigw = np.zeros((M + 1, mu0.shape[0], mu0.shape[0]))

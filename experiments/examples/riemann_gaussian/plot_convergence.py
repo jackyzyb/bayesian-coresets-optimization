@@ -3,6 +3,8 @@ import sys
 
 import bokeh.plotting as bkp
 import numpy as np
+from bokeh.io import export_svgs
+import cairosvg
 
 # make it so we can import models/etc from parent folder
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
@@ -15,7 +17,7 @@ nms = [('GIGAOE', 'GIGA'), ('SVI', 'SparseVI'), ('RAND', 'Uniform'), ('IHT', 'A-
 # plot the KL figure
 fig = bkp.figure(y_axis_type='log', plot_width=1000, plot_height=1000, x_axis_label='iteration',
                  y_axis_label=('f' if plot_reverse_kl else 'Forward KL'))
-preprocess_plot(fig, '32pt', False, True)
+# preprocess_plot(fig, '32pt', False, True)
 
 plot_every = 10
 M = 200
@@ -63,8 +65,23 @@ for i, nm in enumerate(nms):
 legend_len = len(fig.legend.items)
 fig.legend.items = fig.legend.items[legend_len - 2:legend_len] + fig.legend.items[0:legend_len - 2]
 
+axis_font_size = '25pt'
+axis_label_size = '32pt'
+fig.xaxis.axis_label_text_font_size = axis_label_size
+fig.xaxis.major_label_text_font_size = axis_font_size
+fig.yaxis.axis_label_text_font_size = axis_label_size
+fig.yaxis.major_label_text_font_size = axis_font_size
+
 postprocess_plot(fig, '22pt', location='bottom_left', glyph_width=40)
 fig.legend.background_fill_alpha = 0.
 fig.legend.border_line_alpha = 0.
+
+fig.output_backend = 'svg'
+fig_name = 'exp_1_conver'
+
+# figure output
+export_svgs(fig, filename=fig_name + '.svg')
+cairosvg.svg2pdf(
+    file_obj=open(fig_name + '.svg', "rb"), write_to=fig_name + '.pdf')
 
 bkp.show(fig)

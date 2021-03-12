@@ -9,7 +9,7 @@ The two approaches are presented in IHTCoreset._iht() and IHTCoreset._iht_ii(), 
 """
 
 
-class FiniteTangentSpace():
+class FiniteTangentSpace:
     def __init__(self, tangent_space_factory, d):
         vecs = tangent_space_factory()
         d = vecs.shape[1]  # log: no
@@ -52,19 +52,30 @@ class IHTCoreset(Coreset):
     Same as other 'hilbert' methods, this class takes in a tangent space for random projection to finite space.
     """
 
-    def __init__(self, tangent_space_factory, d, iht_mode='IHT', **kw):
+    def __init__(self, tangent_space_factory, d, iht_mode='IHT', stochastic_batch_ratio=-1, tol=1e-5,
+        max_iter=300, **kw):
+        """
+        IHT Coreset Construction
+        :param stochastic_batch_ratio: # if stochastic_batch_ratio is not -1, it should be within (0, 1),
+        representing the percentage of data to form as a random batch. The stochastic batch gradient
+        is only fully supported on self._iht(), i.e., the A-IHT I.
+        The stochastic batch gradient is simulated for the purpose of verifying its effectiveness,
+        so there is no actual time saving. But it is easy to actually implement that.
+        """
         super().__init__(**kw)
         self.reached_numeric_limit = False
         self.iht_mode = iht_mode
         self.T = FiniteTangentSpace(tangent_space_factory, d)
         self.dim = self.T.vecs.shape[0]
+        self.stochastic_batch_ratio = stochastic_batch_ratio
+        self.max_iter = max_iter
+        self.tol = tol
         self.full_wts = np.zeros(self.dim)
         self.full_wts_scaled = np.zeros(self.dim)  # np.random.rand(self.dim)
         self.supp = []
         self.learning_rate = 1e-6
         self.scale = self.T.norms_sum() / self.T.norms()
         self.convergence_error = 0.0001
-        self.MAX_ITER_NUM = 6000
         self.iter_iht = 0
         if np.any(self.T.norms() == 0):
             raise ValueError('.__init__(): tangent space must not have any 0 vectors')
@@ -78,18 +89,26 @@ class IHTCoreset(Coreset):
         y = self.T.vsum.reshape([-1, 1])
         return np.linalg.norm(y - Phi.dot(w), ord=2)
 
-    # accelerated iht
+    def stochastic_Phi(self, Phi, ratio):
+        # randomly select a subset of columns of Phi
+        (M, N) = Phi.shape
+        B = int(N * ratio)
+        sel_cols = np.random.permutation(N)[:B]
+        Phi_batch = np.zeros([M, N])
+        Phi_batch[:, sel_cols] = Phi[:, sel_cols]
+        return Phi_batch
+
+    # Accelerated IHT I (A-IHT I)
     def _iht(self, K):
         # parameters setting, k is sparsity
         Phi = self.T.vecs.T
         y = self.T.vsum.reshape([-1, 1])
+        stochastic_batch_ratio = self.stochastic_batch_ratio
         # np.save('Phi.npy', Phi)
         # np.save('y.npy', y)
         PrintOutResult = True
 
         (M, N) = Phi.shape
-        tol = 1e-5
-        ALPSiters = 300
 
         # Initialize transpose of measurement matrix
         Phi_t = Phi.T
@@ -108,14 +127,22 @@ class IHTCoreset(Coreset):
         i = 1
         obj_list = []
 
-        while (i <= ALPSiters):
+        while i <= self.max_iter:
             x_prev = x_cur
-            if (i == 1):
+            if i == 1:
                 res = y
-                der = Phi_t.dot(res)    # compute gradient
+                if stochastic_batch_ratio != -1:
+                    Phi_batch = self.stochastic_Phi(Phi, stochastic_batch_ratio)
+                    der = Phi_batch.T.dot(res)
+                else:
+                    der = Phi_t.dot(res)    # compute gradient
             else:
                 res = y - Phi_x_cur - tau * Phi_diff
-                der = Phi_t.dot(res)    # compute gradient
+                if stochastic_batch_ratio != -1:
+                    Phi_batch = self.stochastic_Phi(Phi, stochastic_batch_ratio)
+                    der = Phi_batch.T.dot(res)    # compute gradient
+                else:
+                    der = Phi_t.dot(res)    # compute gradient
             Phi_x_prev = Phi_x_cur
             complementary_Yi[Y_i] = 0
             ind_der = np.flip(np.argsort(np.absolute(np.squeeze(der * complementary_Yi))))
@@ -136,13 +163,13 @@ class IHTCoreset(Coreset):
             Phi_x_cur = Phi[:, X_i].dot(x_cur[X_i])
             res = y - Phi_x_cur
 
-            if (i == 1):
+            if i == 1:
                 Phi_diff = Phi_x_cur
             else:
                 Phi_diff = Phi_x_cur - Phi_x_prev
 
             temp = Phi_diff.T.dot(Phi_diff)
-            if (temp > 0):
+            if temp > 0:
                 tau = res.T.dot(Phi_diff) / temp
             else:
                 tau = res.T.dot(Phi_diff) / 1e-6
@@ -151,7 +178,7 @@ class IHTCoreset(Coreset):
             Y_i = np.nonzero(y_cur)[0].tolist()
 
             # print out objective function value during optimization of IHT
-            if (i % 50 == -1):
+            if i % 50 == -1:
                 print('after iteration {}:'.format(i))
                 print('objective value: {}'.format(self._objective_w(x_cur)))
                 print('  ')
@@ -161,7 +188,7 @@ class IHTCoreset(Coreset):
             #  obj_list.append(self._objective_w(x_cur))
 
             # stop criterion
-            if i > 1 and (np.linalg.norm(x_cur - x_prev) < tol * np.linalg.norm(x_cur)):
+            if i > 1 and (np.linalg.norm(x_cur - x_prev) < self.tol * np.linalg.norm(x_cur)):
                 break
             i = i + 1
 
@@ -178,18 +205,17 @@ class IHTCoreset(Coreset):
         # if K == 200:
         #  np.save('iht-convergence.npy', np.array(obj_list))
 
-    # accelerated IHT II
+    # Accelerated IHT II (A-IHT II)
     def _iht_ii(self, K):
         # parameters setting, k is sparsity
         Phi = self.T.vecs.T
         y = self.T.vsum.reshape([-1, 1])
+        stochastic_batch_ratio = self.stochastic_batch_ratio
         # np.save('Phi.npy', Phi)
         # np.save('y.npy', y)
         PrintOutResult = True
 
         (M, N) = Phi.shape
-        tol = 1e-5
-        ALPSiters = 300
 
         # Initialize transpose of measurement matrix
         Phi_t = Phi.T
@@ -208,14 +234,22 @@ class IHTCoreset(Coreset):
         i = 1
         obj_list = []
 
-        while (i <= ALPSiters):
+        while i <= self.max_iter:
             x_prev = x_cur
-            if (i == 1):
+            if i == 1:
                 res = y
-                der = Phi_t.dot(res)        # compute gradient
+                if stochastic_batch_ratio != -1:
+                    Phi_batch = self.stochastic_Phi(Phi, stochastic_batch_ratio)
+                    der = Phi_batch.T.dot(res)
+                else:
+                    der = Phi_t.dot(res)        # compute gradient
             else:
                 res = y - Phi_x_cur - tau * Phi_diff
-                der = Phi_t.dot(res)        # compute gradient
+                if stochastic_batch_ratio != -1:
+                    Phi_batch = self.stochastic_Phi(Phi, stochastic_batch_ratio)
+                    der = Phi_batch.T.dot(res)
+                else:
+                    der = Phi_t.dot(res)        # compute gradient
 
             Phi_x_prev = Phi_x_cur
             complementary_Yi[Y_i] = 0
@@ -234,7 +268,11 @@ class IHTCoreset(Coreset):
             X_i = S_i_temp
             Phi_x_cur = Phi[:, X_i].dot(x_cur[X_i])
             res = y - Phi_x_cur
-            der = Phi_t.dot(res)                                # compute gradient
+            if stochastic_batch_ratio != -1:
+                Phi_batch = self.stochastic_Phi(Phi, stochastic_batch_ratio)
+                der = Phi_batch.T.dot(res)
+            else:
+                der = Phi_t.dot(res)                                # compute gradient
             ider = der[X_i]
             Pder = Phi[:, X_i].dot(ider)
             mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2    # step size selection
@@ -244,13 +282,13 @@ class IHTCoreset(Coreset):
             Phi_x_cur = Phi[:, X_i].dot(x_cur[X_i])
             res = y - Phi_x_cur
 
-            if (i == 1):
+            if i == 1:
                 Phi_diff = Phi_x_cur
             else:
                 Phi_diff = Phi_x_cur - Phi_x_prev
 
             temp = Phi_diff.T.dot(Phi_diff)
-            if (temp > 0):
+            if temp > 0:
                 tau = res.T.dot(Phi_diff) / temp
             else:
                 tau = res.T.dot(Phi_diff) / 1e-6
@@ -259,7 +297,7 @@ class IHTCoreset(Coreset):
             Y_i = np.nonzero(y_cur)[0].tolist()
 
             # print out objective function value during optimization of IHT
-            if (i % 50 == -1):
+            if i % 50 == -1:
                 print('after iteration {}:'.format(i))
                 print('objective value: {}'.format(self._objective_w(x_cur)))
                 print('  ')
@@ -269,7 +307,7 @@ class IHTCoreset(Coreset):
             #  obj_list.append(self._objective_w(x_cur))
 
             # stop criterion
-            if (i > 1) and (np.linalg.norm(x_cur - x_prev) < tol * np.linalg.norm(x_cur)):
+            if (i > 1) and (np.linalg.norm(x_cur - x_prev) < self.tol * np.linalg.norm(x_cur)):
                 break
             i = i + 1
 

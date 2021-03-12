@@ -7,16 +7,17 @@ import numpy as np
 # make it so we can import models/etc from parent folder
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
 from plotting import *
+from bokeh.io import export_svgs
+import cairosvg
 
 plot_reverse_kl = True
 trials = np.arange(1, 11)
-# nms = [('IHT', 'IHT'), ('SVI', 'SparseVI'), ('GIGAO', 'GIGA (Optimal, Projected)'), ('GIGAOE', 'GIGA (Optimal, Exact)'), ('GIGAR', 'GIGA (Realistic, Projected)'), ('GIGARE', 'GIGA (Realistic, Exact)'), ('RAND', 'Uniform')]
 nms = [('GIGAOE', 'GIGA'), ('SVI', 'SparseVI'), ('RAND', 'Uniform'), ('IHT', 'A-IHT'), ('IHT-2', 'A-IHT II')]
 
 # plot the KL figure
-fig = bkp.figure(y_axis_type='log', plot_width=1000, plot_height=1000, x_axis_label='K',
-                 y_axis_label=('Reverse KL' if plot_reverse_kl else 'Forward KL'))
-preprocess_plot(fig, '32pt', False, True)
+fig = bkp.figure(y_axis_type='log', plot_width=1000, plot_height=1000, x_axis_label='Coreset Size k',
+                 y_axis_label=('Reverse KL' if plot_reverse_kl else 'Forward KL'), y_range=(10**(-7.5), 10**(5)))
+# preprocess_plot(fig, '32pt', False, True)
 
 plot_every = 8
 M = 300
@@ -29,7 +30,7 @@ for i, nm in enumerate(nms):
     for t in trials:
         res = np.load('results/results_' + nm[0] + '_' + str(t) + '.npz')
         if plot_reverse_kl:
-            kl.append(res['fklw'][::plot_every])
+            kl.append(res['rklw'][::plot_every])
         else:
             kl.append(res['fklw'][::plot_every])
         sz.append((res['w'] > 0).sum(axis=1)[::plot_every])
@@ -54,8 +55,26 @@ for i, nm in enumerate(nms):
 legend_len = len(fig.legend.items)
 fig.legend.items = fig.legend.items[legend_len - 2:legend_len] + fig.legend.items[0:legend_len - 2]
 
+axis_font_size = '25pt'
+axis_label_size = '32pt'
+fig.xaxis.axis_label_text_font_size = axis_label_size
+fig.xaxis.major_label_text_font_size = axis_font_size
+fig.yaxis.axis_label_text_font_size = axis_label_size
+fig.yaxis.major_label_text_font_size = axis_font_size
+
 postprocess_plot(fig, '22pt', location='bottom_left', glyph_width=40)
 fig.legend.background_fill_alpha = 0.
 fig.legend.border_line_alpha = 0.
 
+fig.output_backend = 'svg'
+
+if plot_reverse_kl is True:
+    fig_name = 'exp_1_rkl'
+else:
+    fig_name = 'exp_1_fkl'
+
+# figure output
+export_svgs(fig, filename=fig_name + '.svg')
+cairosvg.svg2pdf(
+    file_obj=open(fig_name + '.svg', "rb"), write_to=fig_name + '.pdf')
 bkp.show(fig)

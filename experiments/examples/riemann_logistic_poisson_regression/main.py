@@ -38,7 +38,7 @@ def get_laplace(wts, Z, mu0):
 
 
 dnm = sys.argv[1]  # should be synth_lr / phishing / ds1 / synth_poiss / biketrips / airportdelays
-alg = sys.argv[2]  # should be IHT / IHT-2 / GIGAO / GIGAR / RAND / PRIOR / SVI
+alg = sys.argv[2]  # should be IHT / IHT-2 / IHT-stoc / GIGAO / GIGAR / RAND / PRIOR / SVI
 ID = sys.argv[3]  # just a number to denote trial #, any nonnegative integer
 
 np.random.seed(int(ID))
@@ -50,6 +50,7 @@ tuning = {'synth_lr': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'ds1_large': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'phishing': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'phishing_large': (50, lambda itr: 1. / (1. + itr) ** 0.5),
+          'phishing_old': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'synth_poiss': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'synth_poiss_large': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'biketrips': (200, lambda itr: 1. / (1. + itr) ** 0.5),
@@ -57,7 +58,7 @@ tuning = {'synth_lr': (50, lambda itr: 1. / (1. + itr) ** 0.5),
           'airportdelays': (200, lambda itr: 1. / (1. + itr) ** 0.5),
           'airportdelays_large': (200, lambda itr: 1. / (1. + itr) ** 0.5)}
 
-lrdnms = ['synth_lr', 'phishing', 'ds1', 'synth_lr_large', 'phishing_large', 'ds1_large']
+lrdnms = ['synth_lr', 'phishing', 'ds1', 'synth_lr_large', 'phishing_large', 'ds1_large', 'phishing_old']
 prdnms = ['synth_poiss', 'biketrips', 'airportdelays', 'synth_poiss_large', 'biketrips_large', 'airportdelays_large']
 if dnm in lrdnms:
     from model_lr import *
@@ -93,12 +94,14 @@ Sig0 = np.eye(mup.shape[0])
 
 ###############################
 ## TUNING PARAMETERS ##
-learning_rate = lambda itr: 0.5 / (1. + itr)
-n_samples = 100
-M = 100
-projection_dim = 100  # random projection dimension for Hilbert csts
+learning_rate = lambda itr: 0.5 / (1. + itr)        # learning rate for SparseVI
+n_samples = 500
+M = 100     # sparsity constraint, i.e., coreset size
+projection_dim = 500  # random projection dimension for Hilbert csts
 pihat_noise = .0  # noise level (relative) for corrupting pihat
-opt_itrs = 500
+opt_itrs = 500  # optimization iteration for SparseVI
+stochastic_batch_ratio = 0.2 # use a number between 0 and 1 to use stochastic gradient with batches of data in IHT
+                             # stochstic gradient is only tested and supported for A-IHT I.
 ###############################
 
 # get pihat via interpolation between prior/posterior + noise
@@ -157,14 +160,16 @@ unif = bc.UniformSamplingCoreset(Z.shape[0])
 sparsevi = bc.SparseVICoreset(tsf_w, opt_itrs=opt_itrs, step_sched=learning_rate)
 iht = bc.IHTCoreset(tsf_realistic, projection_dim, 'IHT')
 iht_ii = bc.IHTCoreset(tsf_realistic, projection_dim, 'IHT-2')
-
+iht_stoc = bc.IHTCoreset(tsf_realistic, projection_dim, 'IHT', stochastic_batch_ratio=stochastic_batch_ratio)
 algs = {'SVI': sparsevi,
         'GIGAO': giga_optimal,
         'GIGAR': giga_realistic,
         'RAND': unif,
         'IHT': iht,
         'IHT-2': iht_ii,
+        'IHT-stoc': iht_stoc,
         'PRIOR': None}
+
 coreset = algs[alg]
 
 print('Building coresets via ' + alg)
@@ -173,12 +178,12 @@ wts = np.zeros((M + 1, Z.shape[0]))
 cputs = np.zeros(M + 1)
 t0 = time.perf_counter()
 
-if alg == 'IHT' or alg == 'IHT-2':
+if alg == 'IHT' or alg == 'IHT-2' or alg == 'IHT-stoc':
     for m in range(2, M + 1, 1):
         print(str(m) + '/' + str(M))
         t0 = time.perf_counter()
         coreset.build(1, m)
-        # record time and weights
+        # record time and weights: build from scratch
         cputs[m] = time.perf_counter() - t0
         w, idcs = coreset.weights()
         wts[m, idcs] = w
@@ -187,8 +192,7 @@ else:
         print(str(m) + '/' + str(M))
         if alg != 'PRIOR':
             coreset.build(1, m)
-
-            # record time and weights
+            # record time and weights: build from the last coreset
             cputs[m] = time.perf_counter() - t0
             w, idcs = coreset.weights()
             wts[m, idcs] = w
@@ -207,4 +211,4 @@ for m in range(M + 1):
 
 # save results
 np.savez('results/' + dnm + '_' + alg + '_results_' + str(ID) + '.npz', cputs=cputs, wts=wts, Ms=np.arange(M + 1),
-         mus=mus_laplace, Sigs=Sigs_laplace, kls=kls_laplace)
+             mus=mus_laplace, Sigs=Sigs_laplace, kls=kls_laplace)

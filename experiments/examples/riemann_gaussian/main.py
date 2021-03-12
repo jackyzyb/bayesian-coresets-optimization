@@ -9,9 +9,9 @@ import bayesiancoresets as bc
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
 import gaussian
 
-M = 300  # log: 200
-N = 600  # log: 1000
-d = 200  # log: 200
+M = 300
+N = 600
+d = 200
 opt_itrs = 500  # for SparseVI
 proj_dim = 100
 pihat_noise = 0.75
@@ -123,15 +123,10 @@ alg = algs[nm]
 w = np.zeros((M + 1, x.shape[0]))
 for m in range(2, M + 1, 1):
     print('trial: ' + tr + ' alg: ' + nm + ' ' + str(m) + '/' + str(M))
-
     alg.build(1, m)
     # store weights
     wts, idcs = alg.weights()
     w[m, idcs] = wts
-
-    # printouts for debugging purposes
-    # print('reverse KL: ' + str(weighted_post_KL(mu0, Sig0inv, Siginv, x, w_opt[m, :], reverse=True)))
-    # print('reverse KL opt: ' + str(weighted_post_KL(mu0, Sig0inv, Siginv, x, w_opt[m, :], reverse=True)))
 
 muw = np.zeros((M + 1, mu0.shape[0]))
 Sigw = np.zeros((M + 1, mu0.shape[0], mu0.shape[0]))

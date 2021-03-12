@@ -8,6 +8,8 @@ import numpy as np
 # make it so we can import models/etc from parent folder
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
 from plotting import *
+from bokeh.io import export_svgs
+import cairosvg
 
 size_x_axis = False
 trial_num = 1
@@ -91,5 +93,12 @@ for m in Ms:
     fig.yaxis.visible = False
 
     figs.append(fig)
+
+    # figure output
+    fig.output_backend = 'svg'
+    fig_name = 'exp1-coresets_' + 'm' + str(m) +'_id_' + str(trial_num)
+    export_svgs(fig, filename=fig_name + '.svg')
+    cairosvg.svg2pdf(
+        file_obj=open(fig_name + '.svg', "rb"), write_to=fig_name + '.pdf')
 
 bkp.show(bkl.gridplot([figs]))
