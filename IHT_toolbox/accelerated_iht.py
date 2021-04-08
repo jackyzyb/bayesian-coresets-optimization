@@ -6,7 +6,7 @@ Jacky Y. Zhang, Rajiv Khanna, Anastasios Kyrillidis, and Oluwasanmi Koyejo. (AIS
 Both numpy version and pytorch version are offered, where the torch version can be run on GPU for acceleration.
 6 functions are included:
 iht_obj(y, A, w):                                                   calculate the objective value
-l2_projection_torch(w, K, L=None, already_K_sparse=False, K_sparse_supp=None)       l2 projection implemented by numpy
+l2_projection_numpy(w, K, L=None, already_K_sparse=False, K_sparse_supp=None)       l2 projection implemented by numpy
 l2_projection_torch(w, K, L=None, already_K_sparse=False, K_sparse_supp=None)       l2 projection implemented by torch
 a_iht_i(y, A, K, tol=1e-5, max_iter_num=300, verbose=True, L=None):         A-IHT I implemented by numpy
 a_iht_ii(y, A, K, tol=1e-5, max_iter_num=300, verbose=True, L=None):        A-IHT II implemented by numpy
