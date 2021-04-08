@@ -1,3 +1,18 @@
+"""
+This file contains examples that use A-IHT I and A-IHT II algorithms from ./accelerated_iht.py
+
+The optimization objective is
+    argmin_w ||y - Aw||^2    s.t.    ||w||_0 <= K    and    w >= 0    (optional: and sum(w) = L)
+        where   y is of shape (M, 1),
+                A is of shape (M, N),
+                w is of shape (N, 1),
+                K is a positive integer,
+                L is a positive number.
+
+Associated paper:
+Bayesian Coresets: Revisiting the Nonconvex Optimization Perspective (https://arxiv.org/abs/2007.00715).
+Jacky Y. Zhang, Rajiv Khanna, Anastasios Kyrillidis, and Oluwasanmi Koyejo. (AISTATS 2021)
+"""
 import numpy as np
 import torch
 from accelerated_iht import *
