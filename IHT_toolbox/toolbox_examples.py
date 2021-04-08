@@ -29,18 +29,6 @@ true_w = np.zeros([N, 1])
 true_w[true_supp] = np.random.rand(K, 1)
 y = A.dot(true_w)
 
-# projection
-w = np.array([1, -1, -0.5, 0]).reshape([-1, 1])
-k_proj = 2
-w_projected, supp = l2_projection_numpy(w, k_proj, L=2)
-print('original w: {}. Sparsity: {}'.format(w, k_proj))
-print('projected w: {}'.format(w_projected))
-print('support: {}'.format(supp))
-w_projected, supp = l2_projection_numpy(w, k_proj, L=2, K_sparse_supp=[0, 1], already_K_sparse=True)
-print('projected w: {}'.format(w_projected))
-print('support: {}'.format(supp))
-
-
 # A-IHT I by numpy
 print('\nusing A-IHT I by numpy...')
 w, supp = a_iht_i(y, A, K, L=L)
